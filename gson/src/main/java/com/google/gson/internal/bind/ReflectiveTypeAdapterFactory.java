@@ -210,9 +210,13 @@ public final class ReflectiveTypeAdapterFactory implements TypeAdapterFactory {
       }
 
       T instance = constructor.construct();
+      boolean dangling = true;
 
       try {
-        in.beginObject();
+        if (in.peek() == JsonToken.BEGIN_OBJECT) {
+          in.beginObject();
+          dangling = false;
+        }
         while (in.hasNext()) {
           String name = in.nextName();
           BoundField field = boundFields.get(name);
@@ -227,7 +231,9 @@ public final class ReflectiveTypeAdapterFactory implements TypeAdapterFactory {
       } catch (IllegalAccessException e) {
         throw new AssertionError(e);
       }
-      in.endObject();
+      if (!dangling) {
+        in.endObject();
+      }
       return instance;
     }
 
